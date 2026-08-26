@@ -1,0 +1,17 @@
+media/
+static/music/*.mp3
+static/music/*.webm
+static/music/*.m4a
+static/music/*.part
+*.db
+*.sqlite
+*.sqlite3
+.env
+__pycache__/
+venv/
+.idea/
+.vscode/
+.agent/
+.gemini/
+server.log
+server_err.log
