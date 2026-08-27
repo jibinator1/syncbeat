@@ -1445,7 +1445,7 @@ if ($('dl-banner-done')) $('dl-banner-done').textContent = done;
   });
 
   // --- Repeat Mode Handler ---
-  let repeatMode = 'off'; // 'off' | 'all' | 'one'
+  // (repeatMode is declared at the top of the IIFE)
 
   function updateRepeatUI() {
     const dskRep = $('repeat-btn');
