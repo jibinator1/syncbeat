@@ -80,9 +80,17 @@
   }
 
 
+  $('auth-key-input')?.addEventListener('input', () => {
+    const err = $('auth-error');
+    if (err) err.style.display = 'none';
+  });
+
   $('auth-form')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const key = $('auth-key-input').value.trim();
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.textContent = 'Verifying...';
+    
     try {
       const r = await fetch(API + '/auth/verify', {
         method: 'POST',
@@ -92,14 +100,22 @@
       if (r.ok) {
         isAuthenticated = true;
         localStorage.setItem('syncbeats_auth', 'true');
-        $('auth-modal')?.classList.add('hidden');
+        const modal = $('auth-modal');
+        if (modal) {
+          modal.classList.add('hidden');
+          modal.style.display = 'none';
+        }
         toast('Access Granted! Welcome to SyncBeats.');
         loadProfiles();
       } else {
-        $('auth-error').style.display = 'block';
+        const err = $('auth-error');
+        if (err) err.style.display = 'block';
+        if (submitBtn) submitBtn.textContent = 'Unlock';
       }
-    } catch (e) {
-      $('auth-error').style.display = 'block';
+    } catch (err) {
+      const errEl = $('auth-error');
+      if (errEl) errEl.style.display = 'block';
+      if (submitBtn) submitBtn.textContent = 'Unlock';
     }
   });
 
