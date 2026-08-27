@@ -1249,6 +1249,22 @@ if ($('dl-banner-done')) $('dl-banner-done').textContent = done;
     if (jamActive && isHost) {
       wsSend({ type: 'track_change', track_id: t.id, position: 0 });
     }
+
+    // Set lock screen media controls (iOS & Android)
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: t.title,
+        artist: t.artist,
+        album: 'SyncBeats',
+        artwork: [
+          { src: '/static/icon.svg', sizes: '512x512', type: 'image/svg+xml' }
+        ]
+      });
+      navigator.mediaSession.setActionHandler('play', () => togglePlayPause());
+      navigator.mediaSession.setActionHandler('pause', () => togglePlayPause());
+      navigator.mediaSession.setActionHandler('previoustrack', () => handlePrev());
+      navigator.mediaSession.setActionHandler('nexttrack', () => handleNext());
+    }
   }
 
   function updatePlayIcon(playing) {

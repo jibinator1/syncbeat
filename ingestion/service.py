@@ -1,3 +1,4 @@
+from __future__ import annotations
 import asyncio
 import json
 import subprocess
@@ -29,7 +30,7 @@ class IngestService:
 
     def __init__(self):
         self.background_tasks: set[asyncio.Task] = set()
-        self.semaphore = asyncio.Semaphore(5)
+        self.semaphore = asyncio.Semaphore(2)
         self.log_buffer: list[dict] = []
         self._add_log("INFO", "SyncBeats Ingestion Service initialized.")
 

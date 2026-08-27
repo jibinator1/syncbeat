@@ -1,0 +1,17 @@
+{
+  "name": "SyncBeats",
+  "short_name": "SyncBeats",
+  "description": "Stream and sync music in real-time jam sessions",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "/static/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

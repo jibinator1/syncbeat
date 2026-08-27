@@ -1,3 +1,4 @@
+from __future__ import annotations
 import asyncio
 import json
 import re
@@ -6,6 +7,7 @@ import subprocess
 import sys
 import urllib.request
 from pathlib import Path
+from typing import Optional, Union
 
 
 UNKNOWN_ARTIST_VALUES = {"", "unknown", "unknown artist", "various artists", "n/a", "none"}

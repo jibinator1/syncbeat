@@ -1,3 +1,4 @@
+from __future__ import annotations
 import asyncio
 import os
 from contextlib import asynccontextmanager
@@ -28,6 +29,13 @@ app = FastAPI(title="SyncBeats Music Server", lifespan=lifespan)
 
 # Static file routing
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+@app.get("/syncbeats.apk")
+async def download_apk():
+    apk_path = "SyncBeats.apk"
+    if os.path.exists(apk_path):
+        return FileResponse(apk_path, media_type="application/vnd.android.package-archive", filename="SyncBeats.apk")
+    raise HTTPException(status_code=404, detail="APK not found")
 
 
 # Pydantic Schemas / DTOs

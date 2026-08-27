@@ -1,3 +1,4 @@
+from __future__ import annotations
 import asyncio
 import json
 import re
@@ -164,13 +165,42 @@ def download_audio_track(
     process.wait()
     if process.returncode != 0:
         err_text = process.stderr.read()
+
+        # Handle YouTube HTTP 429 (Too Many Requests / Rate limit) with alternate clients and brief backoff
+        if "429" in err_text or "Too Many Requests" in err_text:
+            if log_callback:
+                log_callback("WARNING", f"Track #{track_id}: Rate limit encountered (429). Retrying with alternate client...", track_id)
+            alt_clients = ["android", "ios", "mweb", "web_embedded", "tv"]
+            for client in alt_clients:
+                asyncio.run_coroutine_threadsafe(
+                    progress_callback(track_id, 20.0, f"Retrying ({client})..."),
+                    loop,
+                )
+                alt_cmd = list(base_cmd) + ["--extractor-args", f"youtube:player_client={client}"]
+                alt_proc = execute_popen(alt_cmd)
+                while True:
+                    alt_line = alt_proc.stdout.readline()
+                    if not alt_line:
+                        break
+                    alt_match = progress_regex.search(alt_line.strip())
+                    if alt_match:
+                        pct = float(alt_match.group(1))
+                        asyncio.run_coroutine_threadsafe(
+                            progress_callback(track_id, 25.0 + (pct * 0.6), f"Downloading ({client}): {pct:.0f}%"),
+                            loop,
+                        )
+                alt_proc.wait()
+                if alt_proc.returncode == 0:
+                    if log_callback:
+                        log_callback("INFO", f"Track #{track_id}: Download succeeded using {client} client!", track_id)
+                    return
         
         # Check if error requires YouTube sign-in / cookies
-        if "Sign in to confirm" in err_text or "bot" in err_text.lower() or "cookies" in err_text.lower():
+        if "Sign in to confirm" in err_text or "bot" in err_text.lower() or "cookies" in err_text.lower() or "429" in err_text:
             browsers = ["chrome", "edge", "firefox", "brave", "vivaldi"]
             for browser in browsers:
                 if log_callback:
-                    log_callback("WARNING", f"Track #{track_id}: YouTube auth required. Trying browser cookies ({browser})...", track_id)
+                    log_callback("WARNING", f"Track #{track_id}: Trying browser cookies ({browser})...", track_id)
                 asyncio.run_coroutine_threadsafe(
                     progress_callback(track_id, 30.0, f"Authenticating via {browser.capitalize()}..."),
                     loop,
@@ -193,7 +223,7 @@ def download_audio_track(
                     if log_callback:
                         log_callback("INFO", f"Track #{track_id}: Download succeeded using {browser} cookies!", track_id)
                     return
-            err_msg = f"Download requires YouTube sign in. Please sign into YouTube in Chrome/Edge/Firefox: {err_text[:250]}"
+            err_msg = f"Download error: {err_text[:250]}"
             if log_callback:
                 log_callback("ERROR", f"Track #{track_id}: {err_msg}", track_id)
             raise RuntimeError(err_msg)
