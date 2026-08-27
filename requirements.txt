@@ -1,7 +1,8 @@
-fastapi==0.115.0
-uvicorn[standard]==0.30.6
-yt-dlp==2026.8.19
-sqlalchemy==2.0.35
-aiosqlite==0.20.0
-python-multipart==0.0.9
-python-dotenv==1.0.1
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+yt-dlp>=2024.0.0
+sqlalchemy>=2.0.0
+aiosqlite>=0.20.0
+python-multipart>=0.0.9
+python-dotenv>=1.0.0
+
