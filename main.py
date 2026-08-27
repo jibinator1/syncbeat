@@ -323,6 +323,8 @@ async def download_custom_playlist_zip(playlist_id: int):
             raise HTTPException(400, "No ready tracks in playlist to download")
 
         zip_buffer = io.BytesIO()
+        safe_pl_name = "".join(c for c in (playlist.name or "Playlist") if c.isalnum() or c in " -_").strip() or "Playlist"
+
         with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
             for t in tracks:
                 if t.filename:
@@ -330,11 +332,10 @@ async def download_custom_playlist_zip(playlist_id: int):
                     if mp3_path.exists():
                         safe_title = "".join(c for c in (t.title or "Track") if c.isalnum() or c in " -_.,()").strip()
                         safe_artist = "".join(c for c in (t.artist or "Unknown") if c.isalnum() or c in " -_.,()").strip()
-                        zip_entry_name = f"{safe_artist} - {safe_title}.mp3"
+                        zip_entry_name = f"{safe_pl_name}/{safe_artist} - {safe_title}.mp3"
                         zip_file.write(mp3_path, arcname=zip_entry_name)
 
         zip_buffer.seek(0)
-        safe_pl_name = "".join(c for c in (playlist.name or "Playlist") if c.isalnum() or c in " -_").strip() or "Playlist"
         
         return StreamingResponse(
             zip_buffer,

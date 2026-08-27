@@ -426,7 +426,11 @@ input[type=range].vol-slider:hover::-webkit-slider-thumb{background:var(--green)
   .playlist-controls-right{display:none;}
 
   /* Home View Mobile */
-  .home-scroll-area{padding:16px 16px 120px;}
+  .home-scroll-area{padding:16px 12px 120px;width:100%;}
+  .home-section{width:100%;}
+  .track-table-wrap{width:100%;}
+  .track-table{width:100%;}
+  .playlist-body{padding:0 12px 120px;width:100%;}
   .home-section-header h2{font-size:1.4rem;font-weight:700;margin-bottom:12px;}
   
   /* Spotify Quick Picks 2-Column Grid */
@@ -435,6 +439,7 @@ input[type=range].vol-slider:hover::-webkit-slider-thumb{background:var(--green)
     grid-template-columns:1fr 1fr;
     gap:8px;
     margin-bottom:24px;
+    width:100%;
   }
   .quick-pick-card{
     display:flex;
@@ -468,14 +473,16 @@ input[type=range].vol-slider:hover::-webkit-slider-thumb{background:var(--green)
     overflow:hidden;
   }
 
-  /* Track Row Mobile */
+  /* Track Row Mobile - 100% Full Width Alignment */
   .track-header{display:none}
   .track-row{
     grid-template-columns:1fr 36px 36px;
-    gap:8px;
-    padding:8px 8px;
+    gap:4px;
+    padding:10px 10px;
     align-items:center;
     border-radius:6px;
+    width:100%;
+    margin-bottom:2px;
   }
   .track-row:active{background:rgba(255,255,255,0.06);}
   .track-num{display:none}
@@ -486,6 +493,7 @@ input[type=range].vol-slider:hover::-webkit-slider-thumb{background:var(--green)
     flex:1;
     min-width:0;
     overflow:hidden;
+    padding-right:6px;
   }
   .track-title{
     font-size:0.9rem;

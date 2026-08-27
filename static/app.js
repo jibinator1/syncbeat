@@ -367,22 +367,14 @@
   const UNKNOWN_ARTISTS = new Set(['', 'unknown', 'unknown artist', 'various artists', 'n/a', 'none']);
   const isUnknownArtist = (artist) => UNKNOWN_ARTISTS.has((artist || '').trim().toLowerCase());
 
-  // --- Search Input Listeners (Topbar & Library) ---
+  // --- Search Input Listeners (Topbar, Library & Playlist) ---
   const handleSearchInput = (val) => {
     searchQuery = (val || '').trim().toLowerCase();
-    // Sync all search inputs across views
-    ['search-input', 'pl-search-input', 'track-search-input'].forEach(id => {
-      const input = $(id);
-      if (input && input.value !== val) input.value = val;
-    });
-
-    // If on playlist view and searching globally, switch to Home/Library view
-    if (searchQuery && activePlaylist && activePlaylist !== 'LIKED') {
-      // Allow searching inside current playlist view if on playlist view
-      if ($('view-playlist') && !$('view-playlist').classList.contains('hidden')) {
-        renderPlaylistViewSearch(searchQuery);
-        return;
-      }
+    
+    // If on playlist view, filter the current playlist without leaving
+    if ($('view-playlist') && !$('view-playlist').classList.contains('hidden')) {
+      renderPlaylistViewSearch(searchQuery);
+      return;
     }
 
     // Switch to home view if searching from home topbar
@@ -393,7 +385,7 @@
     renderLibrary();
   };
 
-  ['search-input', 'pl-search-input', 'track-search-input'].forEach(id => {
+  ['search-input', 'pl-search-input', 'track-search-input', 'pl-search-filter-input'].forEach(id => {
     $(id)?.addEventListener('input', (e) => handleSearchInput(e.target.value));
   });
 
@@ -1431,6 +1423,44 @@ if ($('dl-banner-done')) $('dl-banner-done').textContent = done;
     showProfileModal();
   });
 
+  // --- Repeat Mode Handler ---
+  let repeatMode = 'off'; // 'off' | 'all' | 'one'
+
+  function updateRepeatUI() {
+    const dskRep = $('repeat-btn');
+    const fpRep = $('fp-repeat-btn');
+    const dskIcon = $('repeat-icon');
+    const fpIcon = $('fp-repeat-icon');
+
+    const isActive = repeatMode !== 'off';
+    if (dskRep) dskRep.classList.toggle('active', isActive);
+    if (fpRep) fpRep.classList.toggle('active', isActive);
+
+    let iconSvg = '<path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>';
+    if (repeatMode === 'one') {
+      iconSvg = '<path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-3V9h-1l-2 1v1h1.5v4H13z"/>';
+    }
+    if (dskIcon) dskIcon.innerHTML = iconSvg;
+    if (fpIcon) fpIcon.innerHTML = iconSvg;
+  }
+
+  const toggleRepeat = () => {
+    if (repeatMode === 'off') {
+      repeatMode = 'all';
+      toast('Repeat Playlist enabled');
+    } else if (repeatMode === 'all') {
+      repeatMode = 'one';
+      toast('Repeat Track enabled');
+    } else {
+      repeatMode = 'off';
+      toast('Repeat disabled');
+    }
+    updateRepeatUI();
+  };
+
+  $('repeat-btn')?.addEventListener('click', toggleRepeat);
+  $('fp-repeat-btn')?.addEventListener('click', toggleRepeat);
+
   // Next / Previous
   const handleNext = () => {
     const nxt = getNextTrack();
@@ -1446,10 +1476,6 @@ if ($('dl-banner-done')) $('dl-banner-done').textContent = done;
   $('fp-next-btn')?.addEventListener('click', handleNext);
   $('prev-btn')?.addEventListener('click', handlePrev);
   $('fp-prev-btn')?.addEventListener('click', handlePrev);
-
-  // Repeat & Shuffle in Full Player
-  $('fp-shuffle-btn')?.addEventListener('click', () => $('shuffle-btn')?.click());
-  $('fp-repeat-btn')?.addEventListener('click', () => $('repeat-btn')?.click());
 
   // Expand / Close Full Mobile Player
   $('player-bar')?.addEventListener('click', (e) => {
@@ -1566,6 +1592,26 @@ if ($('dl-banner-done')) $('dl-banner-done').textContent = done;
       }
     });
   }
+
+  // Audio Ended Handler
+  audio.addEventListener('ended', () => {
+    updatePlayIcon(false);
+    $('progress-fill').style.width = '0%';
+    if ($('fp-progress-fill')) $('fp-progress-fill').style.width = '0%';
+
+    if (repeatMode === 'one' && currentTrack) {
+      playTrack(currentTrack);
+      return;
+    }
+
+    const nxt = getNextTrack();
+    if (nxt) {
+      playTrack(nxt);
+    } else if (repeatMode === 'all') {
+      const ready = tracks.filter(t => t.status === 'ready');
+      if (ready.length > 0) playTrack(ready[0]);
+    }
+  });
 
   // Volume
   const volSlider = $('volume-slider');
