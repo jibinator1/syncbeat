@@ -46,13 +46,18 @@
   let isAuthenticated = localStorage.getItem('syncbeats_auth') === 'true';
 
   // --- Password Visibility Toggle ---
-  const togglePwBtn = $('toggle-pw-btn');
+  const togglePwSpan = $('toggle-pw-btn');
   const pwInput = $('auth-key-input');
-  if (togglePwBtn && pwInput) {
-    togglePwBtn.addEventListener('click', () => {
-      const isPw = pwInput.type === 'password';
-      pwInput.type = isPw ? 'text' : 'password';
-      $('eye-icon').style.fill = isPw ? '#1db954' : 'currentColor';
+  if (togglePwSpan && pwInput) {
+    togglePwSpan.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const isPassword = pwInput.type === 'password';
+      pwInput.type = isPassword ? 'text' : 'password';
+      const eyeOff = $('eye-icon-off');
+      const eyeOn = $('eye-icon-on');
+      if (eyeOff) eyeOff.style.display = isPassword ? 'none' : 'block';
+      if (eyeOn) eyeOn.style.display = isPassword ? 'block' : 'none';
     });
   }
 
