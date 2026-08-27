@@ -12,7 +12,7 @@
   <link rel="manifest" href="/static/manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css?v=26">
+  <link rel="stylesheet" href="/static/style.css?v=27">
 </head>
 <body>
 
@@ -466,11 +466,13 @@
 <!-- ===== FULL SCREEN MOBILE PLAYER MODAL ===== -->
 <div id="full-player-modal" class="full-player-modal hidden">
   <div class="full-player-header">
-    <button id="close-full-player-btn" class="fp-close-btn">
+    <button id="close-full-player-btn" class="fp-close-btn" title="Collapse">
       <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z"/></svg>
     </button>
-    <div class="fp-header-title">PLAYING FROM LIBRARY</div>
-    <div style="width:24px"></div>
+    <div class="fp-header-title" id="fp-header-title">PLAYING FROM LIBRARY</div>
+    <button id="fp-queue-btn" class="fp-close-btn" title="Queue">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/></svg>
+    </button>
   </div>
   <div class="full-player-body">
     <div class="full-player-art-wrap">
@@ -495,12 +497,21 @@
       </div>
     </div>
     <div class="full-player-controls">
-      <button class="p-btn" id="fp-shuffle-btn"><svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg></button>
-      <button class="p-btn" id="fp-prev-btn"><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
-      <button class="p-btn p-btn-play fp-play-btn" id="fp-play-btn"><svg id="fp-play-icon" viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
-      <button class="p-btn" id="fp-next-btn"><svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
-      <button class="p-btn" id="fp-repeat-btn"><svg id="fp-repeat-icon" viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button>
+      <button class="p-btn" id="fp-shuffle-btn" title="Shuffle"><svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg></button>
+      <button class="p-btn" id="fp-prev-btn" title="Previous"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+      <button class="p-btn p-btn-play fp-play-btn" id="fp-play-btn" title="Play/Pause"><svg id="fp-play-icon" viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+      <button class="p-btn" id="fp-next-btn" title="Next"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+      <button class="p-btn" id="fp-repeat-btn" title="Repeat"><svg id="fp-repeat-icon" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button>
     </div>
+  </div>
+
+  <!-- Mobile Queue Drawer Inside Full Player -->
+  <div id="fp-queue-drawer" class="fp-queue-drawer hidden">
+    <div class="fp-queue-header">
+      <h3>Now Playing Queue</h3>
+      <button id="close-fp-queue-btn" class="icon-btn">✕</button>
+    </div>
+    <div class="fp-queue-content" id="fp-queue-list"></div>
   </div>
 </div>
 
@@ -609,6 +620,6 @@
   </div>
 </div>
 
-<script src="/static/app.js?v=26"></script>
+<script src="/static/app.js?v=27"></script>
 </body>
 </html>

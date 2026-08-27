@@ -961,54 +961,111 @@ if ($('dl-banner-done')) $('dl-banner-done').textContent = done;
 
   let isShuffle = false;
   let userQueue = [];
+  let shuffledQueue = [];
 
-  // --- Queue Panel ---
+  function generateShuffledQueue() {
+    const ready = tracks.filter(t => t.status === 'ready');
+    const remaining = ready.filter(t => !currentTrack || t.id !== currentTrack.id);
+    for (let i = remaining.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+    }
+    shuffledQueue = remaining;
+  }
+
+  function updateShuffleUI() {
+    const dskShuffle = $('shuffle-btn');
+    const fpShuffle = $('fp-shuffle-btn');
+    if (dskShuffle) dskShuffle.classList.toggle('active', isShuffle);
+    if (fpShuffle) fpShuffle.classList.toggle('active', isShuffle);
+  }
+
+  // --- Queue Panel (Desktop & Mobile) ---
   function updateQueuePanel() {
     const nowEl = $('queue-now-track');
     const nextEl = $('queue-next-list');
-    if (!nowEl || !nextEl) return;
+    const fpQueueList = $('fp-queue-list');
 
-    if (currentTrack) {
-      nowEl.innerHTML = `
-        <div style="display:flex;align-items:center;gap:12px;padding:8px 0">
-          <div style="width:40px;height:40px;border-radius:4px;background:#282828;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="#1db954"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
-          </div>
-          <div style="min-width:0">
-            <div style="font-size:.85rem;font-weight:600;color:#1db954;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(currentTrack.title)}</div>
-            <div style="font-size:.75rem;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(currentTrack.artist)}</div>
-          </div>
-        </div>`;
-    } else {
-      nowEl.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:8px 0">Nothing playing</div>';
-    }
-
-    // Show user-added queue items first, then upcoming from library
     const ready = tracks.filter(t => t.status === 'ready');
     const curIdx = ready.findIndex(t => t.id === currentTrack?.id);
-    const upcoming = isShuffle ? [] : ready.slice(curIdx + 1, curIdx + 11);
-    const combined = [...userQueue.slice(0, 5), ...upcoming].slice(0, 10);
 
-    if (!combined.length) {
-      nextEl.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:8px 0">Queue is empty</div>';
-      return;
+    let upcoming = [];
+    if (isShuffle) {
+      upcoming = shuffledQueue.slice(0, 15);
+    } else {
+      upcoming = curIdx >= 0 ? ready.slice(curIdx + 1, curIdx + 16) : ready.slice(0, 15);
     }
-    nextEl.innerHTML = combined.map((t, i) => `
-      <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-radius:4px;cursor:pointer" class="queue-track-item" data-qid="${t.id}">
-        <div style="width:40px;height:40px;border-radius:4px;background:#282828;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.75rem;color:var(--text-sub)">${i < userQueue.slice(0,5).length ? '★' : i - userQueue.slice(0,5).length + curIdx + 2}</div>
-        <div style="min-width:0;flex:1">
-          <div style="font-size:.85rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.title)}</div>
-          <div style="font-size:.75rem;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.artist)}</div>
-        </div>
-      </div>`).join('');
 
-    nextEl.querySelectorAll('.queue-track-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const tid = Number(item.dataset.qid);
-        const t = tracks.find(x => x.id === tid);
-        if (t) playTrack(t);
-      });
-    });
+    const combined = [...userQueue.slice(0, 5), ...upcoming].slice(0, 15);
+
+    // Desktop Queue Panel
+    if (nowEl && nextEl) {
+      if (currentTrack) {
+        nowEl.innerHTML = `
+          <div style="display:flex;align-items:center;gap:12px;padding:8px 0">
+            <div style="width:40px;height:40px;border-radius:4px;background:#282828;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="#1db954"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
+            </div>
+            <div style="min-width:0">
+              <div style="font-size:.85rem;font-weight:600;color:#1db954;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(currentTrack.title)}</div>
+              <div style="font-size:.75rem;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(currentTrack.artist)}</div>
+            </div>
+          </div>`;
+      } else {
+        nowEl.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:8px 0">Nothing playing</div>';
+      }
+
+      if (!combined.length) {
+        nextEl.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:8px 0">Queue is empty</div>';
+      } else {
+        nextEl.innerHTML = combined.map((t, i) => `
+          <div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-radius:4px;cursor:pointer" class="queue-track-item" data-qid="${t.id}">
+            <div style="width:36px;height:36px;border-radius:4px;background:#282828;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.75rem;color:var(--text-sub)">${i < userQueue.slice(0,5).length ? '★' : (i + 1)}</div>
+            <div style="min-width:0;flex:1">
+              <div style="font-size:.85rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.title)}</div>
+              <div style="font-size:.75rem;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.artist)}</div>
+            </div>
+          </div>`).join('');
+
+        nextEl.querySelectorAll('.queue-track-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const tid = Number(item.dataset.qid);
+            const t = tracks.find(x => x.id === tid);
+            if (t) playTrack(t);
+          });
+        });
+      }
+    }
+
+    // Mobile Queue Drawer
+    if (fpQueueList) {
+      if (!combined.length) {
+        fpQueueList.innerHTML = '<div style="color:var(--muted);font-size:.9rem;text-align:center;padding:40px 0">Queue is empty</div>';
+      } else {
+        fpQueueList.innerHTML = `
+          <div style="font-size:.78rem;font-weight:700;color:var(--text-sub);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px">${isShuffle ? 'Shuffled Next' : 'Next Up'}</div>
+          ${combined.map((t, i) => `
+            <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer" class="fp-queue-item" data-qid="${t.id}">
+              <div style="width:40px;height:40px;border-radius:6px;background:#282828;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:.8rem;color:var(--text-sub)">${i < userQueue.slice(0,5).length ? '★' : (i + 1)}</div>
+              <div style="min-width:0;flex:1">
+                <div style="font-size:.92rem;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.title)}</div>
+                <div style="font-size:.8rem;color:var(--text-sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(t.artist)}</div>
+              </div>
+              <div style="font-size:.78rem;color:var(--text-sub)">${t.duration ? fmt(t.duration) : ''}</div>
+            </div>`).join('')}`;
+
+        fpQueueList.querySelectorAll('.fp-queue-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const tid = Number(item.dataset.qid);
+            const t = tracks.find(x => x.id === tid);
+            if (t) {
+              playTrack(t);
+              $('fp-queue-drawer')?.classList.add('hidden');
+            }
+          });
+        });
+      }
+    }
   }
 
   $('queue-btn')?.addEventListener('click', (e) => {
@@ -1021,15 +1078,28 @@ if ($('dl-banner-done')) $('dl-banner-done').textContent = done;
 
   $('close-queue-btn')?.addEventListener('click', () => $('queue-panel')?.classList.add('hidden'));
 
+  // Full Player Queue Drawer Toggle
+  $('fp-queue-btn')?.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const drawer = $('fp-queue-drawer');
+    if (!drawer) return;
+    drawer.classList.toggle('hidden');
+    if (!drawer.classList.contains('hidden')) updateQueuePanel();
+  });
+
+  $('close-fp-queue-btn')?.addEventListener('click', () => $('fp-queue-drawer')?.classList.add('hidden'));
+
   // --- Shuffle Toggle ---
-  const shuffleBtn = $('shuffle-btn');
-  if (shuffleBtn) {
-    shuffleBtn.addEventListener('click', () => {
-      isShuffle = !isShuffle;
-      shuffleBtn.classList.toggle('active', isShuffle);
-      toast(isShuffle ? 'Shuffle enabled' : 'Shuffle disabled');
-    });
-  }
+  const toggleShuffle = () => {
+    isShuffle = !isShuffle;
+    if (isShuffle) generateShuffledQueue();
+    updateShuffleUI();
+    updateQueuePanel();
+    toast(isShuffle ? 'Shuffle enabled' : 'Shuffle disabled');
+  };
+
+  $('shuffle-btn')?.addEventListener('click', toggleShuffle);
+  $('fp-shuffle-btn')?.addEventListener('click', toggleShuffle);
 
   // --- Context Menu Management ---
   const ctxMenu = $('context-menu');
@@ -1191,14 +1261,16 @@ if ($('dl-banner-done')) $('dl-banner-done').textContent = done;
     if (!ready.length) return null;
 
     if (userQueue.length > 0) {
-      return userQueue.shift();
+      const trk = userQueue.shift();
+      updateQueuePanel();
+      return trk;
     }
 
     if (isShuffle) {
-      const candidates = ready.filter(t => !currentTrack || t.id !== currentTrack.id);
-      if (!candidates.length) return ready[0];
-      const randIdx = Math.floor(Math.random() * candidates.length);
-      return candidates[randIdx];
+      if (!shuffledQueue.length) generateShuffledQueue();
+      const trk = shuffledQueue.shift() || ready[0];
+      updateQueuePanel();
+      return trk;
     }
 
     const idx = ready.findIndex(t => t.id === currentTrack?.id);
@@ -1391,7 +1463,7 @@ if ($('dl-banner-done')) $('dl-banner-done').textContent = done;
   });
 
   audio.addEventListener('timeupdate', () => {
-    if (!audio.duration) return;
+    if (!audio.duration || isSeeking || isDesktopSeeking) return;
     const pct = (audio.currentTime / audio.duration) * 100;
     $('progress-fill').style.width = pct + '%';
     if ($('player-bar')) $('player-bar').style.setProperty('--player-progress', pct + '%');
@@ -1404,6 +1476,7 @@ if ($('dl-banner-done')) $('dl-banner-done').textContent = done;
 
   // Robust Seekbar Drag & Click handling (Touch & Mouse)
   let isSeeking = false;
+  let isDesktopSeeking = false;
 
   function handleSeek(clientX, barEl) {
     if (!audio.duration || !barEl) return;
@@ -1462,7 +1535,6 @@ if ($('dl-banner-done')) $('dl-banner-done').textContent = done;
   // Desktop Player Seekbar
   const dskBar = $('progress-bar');
   if (dskBar) {
-    let isDesktopSeeking = false;
     const onMouseMove = (e) => {
       if (!isDesktopSeeking) return;
       handleSeek(e.clientX, dskBar);
