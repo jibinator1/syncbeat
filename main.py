@@ -302,6 +302,47 @@ async def download_track(track_id: int):
         return response
 
 
+@app.get("/download/playlist/{playlist_id}")
+async def download_custom_playlist_zip(playlist_id: int):
+    """Download entire custom playlist as a zip file."""
+    import zipfile
+    import io
+    from fastapi.responses import StreamingResponse
+
+    async with async_session() as db:
+        playlist = (await db.execute(select(CustomPlaylist).where(CustomPlaylist.id == playlist_id))).scalar_one_or_none()
+        if not playlist:
+            raise HTTPException(404, "Playlist not found")
+        
+        ptracks = (await db.execute(select(PlaylistTrack.track_id).where(PlaylistTrack.playlist_id == playlist_id))).scalars().all()
+        if not ptracks:
+            raise HTTPException(400, "Playlist is empty")
+        
+        tracks = (await db.execute(select(Track).where(Track.id.in_(ptracks), Track.status == "ready"))).scalars().all()
+        if not tracks:
+            raise HTTPException(400, "No ready tracks in playlist to download")
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+            for t in tracks:
+                if t.filename:
+                    mp3_path = MEDIA_DIR / t.filename
+                    if mp3_path.exists():
+                        safe_title = "".join(c for c in (t.title or "Track") if c.isalnum() or c in " -_.,()").strip()
+                        safe_artist = "".join(c for c in (t.artist or "Unknown") if c.isalnum() or c in " -_.,()").strip()
+                        zip_entry_name = f"{safe_artist} - {safe_title}.mp3"
+                        zip_file.write(mp3_path, arcname=zip_entry_name)
+
+        zip_buffer.seek(0)
+        safe_pl_name = "".join(c for c in (playlist.name or "Playlist") if c.isalnum() or c in " -_").strip() or "Playlist"
+        
+        return StreamingResponse(
+            zip_buffer,
+            media_type="application/zip",
+            headers={"Content-Disposition": f'attachment; filename="{safe_pl_name}.zip"'}
+        )
+
+
 @app.patch("/tracks/{track_id}")
 async def update_track(track_id: int, payload: UpdateTrackPayload):
     """Update user-managed track metadata and playlist assignment."""

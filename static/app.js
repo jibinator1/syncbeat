@@ -919,7 +919,7 @@ if ($('dl-banner-done')) $('dl-banner-done').textContent = done;
     });
   }
 
-  // Playlist view back buttons & play all
+  // Playlist view back buttons, download & play all
   $('pl-back-btn')?.addEventListener('click', () => showView('home'));
   $('pl-play-btn')?.addEventListener('click', () => {
     let plTracks = [];
@@ -932,6 +932,31 @@ if ($('dl-banner-done')) $('dl-banner-done').textContent = done;
     }
     const ready = plTracks.filter(t => t.status === 'ready');
     if (ready.length > 0) playTrack(ready[0]);
+  });
+
+  // Download Playlist button (Spotify style ZIP export)
+  $('pl-download-btn')?.addEventListener('click', () => {
+    if (activePlaylist && typeof activePlaylist === 'object' && activePlaylist.id) {
+      toast(`Preparing download for playlist "${activePlaylist.name}"...`);
+      window.location.href = API + `/download/playlist/${activePlaylist.id}`;
+    } else if (activePlaylist === 'LIKED') {
+      toast('Downloading individual liked tracks from library...');
+      const likedSet = getLikedSongs();
+      const likedTracks = tracks.filter(t => likedSet.has(t.id) && t.status === 'ready');
+      if (likedTracks.length === 0) return toast('No ready tracks in Liked Songs to download', 'error');
+      likedTracks.forEach((t, i) => {
+        setTimeout(() => {
+          const a = document.createElement('a');
+          a.href = API + `/download/${t.id}`;
+          a.download = `${t.title || 'track'}.mp3`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+        }, i * 300);
+      });
+    } else {
+      toast('Please open a custom playlist to download it as a ZIP', 'error');
+    }
   });
 
   let isShuffle = false;
@@ -1377,83 +1402,98 @@ if ($('dl-banner-done')) $('dl-banner-done').textContent = done;
     if ($('fp-time-dur')) $('fp-time-dur').textContent = fmt(audio.duration);
   });
 
-  $('fp-progress-bar')?.addEventListener('click', (e) => {
-    if (!audio.duration) return;
-    const rect = $('fp-progress-bar').getBoundingClientRect();
-    const pct = (e.clientX - rect.left) / rect.width;
-    audio.currentTime = pct * audio.duration;
-    if (jamActive) wsSend({ type: 'seek', position: audio.currentTime });
-  });
+  // Robust Seekbar Drag & Click handling (Touch & Mouse)
+  let isSeeking = false;
 
-  // Mobile Bottom Navigation logic
-  document.querySelectorAll('.mobile-nav-item[data-view]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const targetView = btn.dataset.view;
-      showView(targetView);
-    });
-  });
+  function handleSeek(clientX, barEl) {
+    if (!audio.duration || !barEl) return;
+    const rect = barEl.getBoundingClientRect();
+    const pos = Math.max(0, Math.min(clientX - rect.left, rect.width));
+    const pct = (pos / rect.width);
+    const newTime = pct * audio.duration;
+    
+    $('progress-fill').style.width = (pct * 100) + '%';
+    if ($('player-bar')) $('player-bar').style.setProperty('--player-progress', (pct * 100) + '%');
+    if ($('fp-progress-fill')) $('fp-progress-fill').style.width = (pct * 100) + '%';
+    if ($('time-cur')) $('time-cur').textContent = fmt(newTime);
+    if ($('fp-time-cur')) $('fp-time-cur').textContent = fmt(newTime);
+    return newTime;
+  }
 
-  $('mobile-nav-search-btn')?.addEventListener('click', () => {
-    document.querySelectorAll('.mobile-nav-item').forEach(b => b.classList.remove('active'));
-    $('mobile-nav-search-btn')?.classList.add('active');
-    showView('home');
-    setTimeout(() => $('search-input')?.focus(), 150);
-  });
+  // Mobile Full Player Seekbar
+  const fpBar = $('fp-progress-bar');
+  if (fpBar) {
+    const onTouchMove = (e) => {
+      if (!isSeeking) return;
+      const touch = e.touches[0];
+      handleSeek(touch.clientX, fpBar);
+    };
 
-  $('mobile-create-playlist-btn')?.addEventListener('click', () => {
-    $('create-playlist-btn')?.click();
-  });
+    const onTouchEnd = (e) => {
+      if (!isSeeking) return;
+      isSeeking = false;
+      const touch = e.changedTouches[0];
+      const finalTime = handleSeek(touch.clientX, fpBar);
+      if (finalTime !== undefined && !isNaN(finalTime)) {
+        audio.currentTime = finalTime;
+        if (jamActive) wsSend({ type: 'seek', position: finalTime });
+      }
+      window.removeEventListener('touchmove', onTouchMove);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
 
-  // --- Repeat Mode Handler ---
-  const repeatBtn = $('repeat-btn');
-  const repeatIcon = $('repeat-icon');
-  if (repeatBtn) {
-    repeatBtn.addEventListener('click', () => {
-      if (repeatMode === 'off') {
-        repeatMode = 'all';
-        repeatBtn.title = 'Repeat Playlist (On)';
-        repeatBtn.classList.add('active');
-        if (repeatIcon) repeatIcon.innerHTML = '<path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>';
-        toast('Repeat Playlist enabled');
-      } else if (repeatMode === 'all') {
-        repeatMode = 'one';
-        repeatBtn.title = 'Repeat Current Track (On)';
-        repeatBtn.classList.add('active');
-        if (repeatIcon) repeatIcon.innerHTML = '<path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-3V9h-1l-2 1v1h1.5v4H13z"/>';
-        toast('Repeat Track enabled');
-      } else {
-        repeatMode = 'off';
-        repeatBtn.title = 'Repeat Off';
-        repeatBtn.classList.remove('active');
-        if (repeatIcon) repeatIcon.innerHTML = '<path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>';
-        toast('Repeat disabled');
+    fpBar.addEventListener('touchstart', (e) => {
+      isSeeking = true;
+      const touch = e.touches[0];
+      handleSeek(touch.clientX, fpBar);
+      window.addEventListener('touchmove', onTouchMove, { passive: false });
+      window.addEventListener('touchend', onTouchEnd, { passive: false });
+    }, { passive: false });
+
+    fpBar.addEventListener('click', (e) => {
+      const finalTime = handleSeek(e.clientX, fpBar);
+      if (finalTime !== undefined && !isNaN(finalTime)) {
+        audio.currentTime = finalTime;
+        if (jamActive) wsSend({ type: 'seek', position: finalTime });
       }
     });
   }
 
-  audio.addEventListener('ended', () => {
-    updatePlayIcon(false);
-    $('progress-fill').style.width = '0%';
+  // Desktop Player Seekbar
+  const dskBar = $('progress-bar');
+  if (dskBar) {
+    let isDesktopSeeking = false;
+    const onMouseMove = (e) => {
+      if (!isDesktopSeeking) return;
+      handleSeek(e.clientX, dskBar);
+    };
+    const onMouseUp = (e) => {
+      if (!isDesktopSeeking) return;
+      isDesktopSeeking = false;
+      const finalTime = handleSeek(e.clientX, dskBar);
+      if (finalTime !== undefined && !isNaN(finalTime)) {
+        audio.currentTime = finalTime;
+        if (jamActive) wsSend({ type: 'seek', position: finalTime });
+      }
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('mouseup', onMouseUp);
+    };
 
-    if (repeatMode === 'one' && currentTrack) {
-      playTrack(currentTrack);
-      return;
-    }
+    dskBar.addEventListener('mousedown', (e) => {
+      isDesktopSeeking = true;
+      handleSeek(e.clientX, dskBar);
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    });
 
-    const nxt = getNextTrack();
-    if (nxt) playTrack(nxt);
-  });
-
-
-  $('progress-bar').addEventListener('click', (e) => {
-    if (!audio.duration) return;
-    const rect = $('progress-bar').getBoundingClientRect();
-    const pct = (e.clientX - rect.left) / rect.width;
-    audio.currentTime = pct * audio.duration;
-    if (jamActive) wsSend({ type: 'seek', position: audio.currentTime });
-  });
+    dskBar.addEventListener('click', (e) => {
+      const finalTime = handleSeek(e.clientX, dskBar);
+      if (finalTime !== undefined && !isNaN(finalTime)) {
+        audio.currentTime = finalTime;
+        if (jamActive) wsSend({ type: 'seek', position: finalTime });
+      }
+    });
+  }
 
   // Volume
   const volSlider = $('volume-slider');
