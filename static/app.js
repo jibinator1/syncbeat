@@ -24,11 +24,29 @@
     const pill = document.querySelector(`.nav-pill[data-view="${viewName}"]`);
     if (pill) pill.classList.add('active');
     $('view-' + viewName)?.classList.remove('hidden');
+    // Sync mobile bottom nav active state
+    document.querySelectorAll('.mobile-nav-item[data-view]').forEach(x => x.classList.remove('active'));
+    const mobileBtn = document.querySelector(`.mobile-nav-item[data-view="${viewName}"]`);
+    if (mobileBtn) mobileBtn.classList.add('active');
   }
 
   document.querySelectorAll('.nav-pill[data-view]').forEach(btn => {
     btn.addEventListener('click', () => showView(btn.dataset.view));
   });
+
+  // Mobile bottom nav — wire up all tabs with data-view
+  document.querySelectorAll('.mobile-nav-item[data-view]').forEach(btn => {
+    btn.addEventListener('click', () => showView(btn.dataset.view));
+  });
+
+  // Mobile search button — focus the search bar on home view
+  const mobileSearchBtn = $('mobile-nav-search-btn');
+  if (mobileSearchBtn) {
+    mobileSearchBtn.addEventListener('click', () => {
+      showView('home');
+      setTimeout(() => $('search-input')?.focus(), 100);
+    });
+  }
 
   // Home greeting
   function setGreeting() {
@@ -406,7 +424,7 @@
     renderLibrary();
   };
 
-  ['search-input', 'pl-search-input', 'track-search-input', 'pl-search-filter-input'].forEach(id => {
+  ['search-input', 'pl-search-input', 'pl-search-filter-input'].forEach(id => {
     $(id)?.addEventListener('input', (e) => handleSearchInput(e.target.value));
   });
 
@@ -483,10 +501,6 @@
   function updateDlBanner() {
     const banner = $('dl-banner');
     const active = tracks.filter(t => t.status === 'pending' || t.status === 'processing');
-    const recent = tracks.filter(t => {
-      // Count tracks that were part of recent batch (last 60s)
-      return t.status === 'pending' || t.status === 'processing' || t.status === 'ready' || t.status === 'error';
-    });
 
     if (active.length === 0) {
       banner?.classList.add('hidden');
@@ -599,9 +613,6 @@ if ($('dl-banner-done')) $('dl-banner-done').textContent = done;
 
           return `
             <div class="track-row ${isActive ? 'active' : ''}" data-id="${t.id}">
-              <div class="track-art-col">
-                <svg viewBox="0 0 24 24"><path d="M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z"/></svg>
-              </div>
               <div class="track-num">
                 <span class="track-num-text">${isActive ? '♫' : (i + 1)}</span>
                 <span class="track-play-icon">▶</span>
