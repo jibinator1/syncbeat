@@ -1,0 +1,46 @@
+================================================================================
+                    SYNCBEATS - MAC SERVER CHEAT SHEET
+================================================================================
+
+1. CHECK LIVE PUBLIC LINK (PHONE / PC ACCESS)
+--------------------------------------------------------------------------------
+grep -o "https://.*\.trycloudflare\.com" tunnel.log | tail -n 1
+
+
+2. UPDATE CODE (ZERO DOWNTIME - KEEPS SAME URL)
+--------------------------------------------------------------------------------
+git pull origin main && pkill -f "uvicorn main:app" && nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8080 > server.log 2>&1 &
+
+
+3. CHECK SERVER STATUS
+--------------------------------------------------------------------------------
+ps aux | grep -E "uvicorn|cloudflared"
+
+
+4. START EVERYTHING (AFTER MAC REBOOT)
+--------------------------------------------------------------------------------
+cd ~/Downloads/music
+source venv/bin/activate
+nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8080 > server.log 2>&1 &
+nohup cloudflared tunnel --url http://localhost:8080 > tunnel.log 2>&1 &
+
+
+5. VIEW LIVE ACTIVITY / DOWNLOAD PROGRESS
+--------------------------------------------------------------------------------
+tail -f server.log
+(Press Ctrl + C to exit log view)
+
+
+6. STOP EVERYTHING
+--------------------------------------------------------------------------------
+pkill -f "uvicorn main:app"
+pkill -f "cloudflared"
+
+
+7. SET / CHANGE PRIVATE ACCESS PASSWORD
+--------------------------------------------------------------------------------
+echo "ACCESS_KEY=YourSecretPassword" > .env
+pkill -f "uvicorn main:app"
+nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8080 > server.log 2>&1 &
+
+================================================================================
