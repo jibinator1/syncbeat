@@ -12,7 +12,7 @@
   <link rel="manifest" href="/static/manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css?v=37">
+  <link rel="stylesheet" href="/static/style.css?v=38">
 </head>
 <body>
 
@@ -613,11 +613,12 @@
     <h1 style="font-size:2rem;margin-bottom:8px">Who is listening?</h1>
     <p style="color:var(--muted);font-size:.9rem;margin-bottom:24px">Select your SyncBeats profile</p>
     <div id="profile-grid" style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:24px"></div>
-    <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:16px">
-      <form id="create-profile-form" style="display:flex;gap:10px;justify-content:center">
-        <input type="text" id="new-profile-name" placeholder="New Profile Name" required style="padding:8px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:#fff">
+    <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:16px;display:flex;flex-direction:column;gap:12px;align-items:center">
+      <form id="create-profile-form" style="display:flex;gap:10px;justify-content:center;width:100%">
+        <input type="text" id="new-profile-name" placeholder="New Profile Name" required style="flex:1;max-width:240px;padding:8px 12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:6px;color:#fff">
         <button type="submit" class="btn btn-sm" style="background:transparent;border:1px solid var(--muted);color:#fff;border-radius:500px">+ Add Profile</button>
       </form>
+      <button id="android-change-server-btn" class="btn btn-sm" style="display:none;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);color:var(--text-sub);border-radius:500px;font-size:0.75rem;padding:6px 16px">⚙ Change Server URL</button>
     </div>
   </div>
 </div>
@@ -655,6 +656,6 @@
   </div>
 </div>
 
-<script src="/static/app.js?v=36"></script>
+<script src="/static/app.js?v=38"></script>
 </body>
 </html>

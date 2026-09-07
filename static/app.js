@@ -214,6 +214,14 @@
 
   function showProfileModal() {
     $('profile-modal')?.classList.remove('hidden');
+    // If running in Android App, display the Change Server URL button
+    const changeServerBtn = $('android-change-server-btn');
+    if (changeServerBtn && typeof window.AndroidBridge !== 'undefined') {
+      changeServerBtn.style.display = 'inline-block';
+      changeServerBtn.onclick = () => {
+        window.AndroidBridge.changeServer();
+      };
+    }
   }
 
   $('switch-profile-btn')?.addEventListener('click', () => {
