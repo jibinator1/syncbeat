@@ -260,7 +260,7 @@ Manages realtime WebSocket synchronization across room participants.
 ## 🔁 5. Complete Data Flow Diagram
 
 ```
- [User UI: Web Browser]
+ [User UI: Web Browser / Android APK]
        │
        │ 1. POST /ingest (URL: YouTube or Spotify)
        ▼
@@ -287,6 +287,87 @@ Manages realtime WebSocket synchronization across room participants.
        │ 3. UI plays audio via GET /download/{track_id}
        ▼
  [HTML5 Audio Player] ─── WebSocket Sync (rooms.py) ───► Other Jam Mode Listeners
+```
+
+---
+
+## 📱 6. Mac-to-Phone Service Architecture & Remote Tunneling
+
+SyncBeats is designed to run 24/7 on a primary computer (e.g., a MacBook) and stream audio seamlessly to mobile devices anywhere in the world.
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                       MacBook Host Machine                      │
+│                                                                 │
+│  ┌──────────────────────┐             ┌──────────────────────┐  │
+│  │    Uvicorn Server    │             │   Cloudflared Tunnel │  │
+│  │   (FastAPI Engine)   │◄───────────►│  (Outbound Tunnel)   │  │
+│  │  0.0.0.0:8080 (IPv4) │             │  to Cloudflare Edge  │  │
+│  └──────────┬───────────┘             └──────────┬───────────┘  │
+│             │                                    │              │
+│       Local Network                        Public HTTPS         │
+└─────────────┼────────────────────────────────────┼──────────────┘
+              │                                    │
+              ▼                                    ▼
+       Local Wi-Fi Access                 Cloudflare Edge Gateway
+   http://192.168.x.x:8080            https://xxxx.trycloudflare.com
+              │                                    │
+              └────────────────┬───────────────────┘
+                               │
+                               ▼
+              ┌─────────────────────────────────┐
+              │    Android Client (SyncBeats)   │
+              │                                 │
+              │  1. Jetpack Compose App         │
+              │  2. Server URL in SharedPreferences│
+              │  3. Auto-connects on launch     │
+              │  4. Native WebView Audio Playback│
+              │  5. Error recovery & ⚙ menu     │
+              └─────────────────────────────────┘
+```
+
+### 6.1 Components of the Service
+
+1. **Host Server (MacBook)**:
+   * Runs the Python/FastAPI backend on port `8080` (`0.0.0.0:8080`).
+   * Manages music downloads, SQLite database records, and streaming MP3 files.
+   * Serves the compiled Android application directly at `/syncbeats.apk` so you can install or update the app on any device.
+
+2. **Cloudflare Tunnel (`cloudflared`)**:
+   * Creates a secure, encrypted outbound tunnel from `http://127.0.0.1:8080` to Cloudflare's global edge network.
+   * **No port forwarding required**: You do not need to open ports on your home Wi-Fi router or expose your public IP address.
+   * Generates a secure HTTPS public address (e.g., `https://xxxx.trycloudflare.com`) accessible from cellular data (5G/LTE) or any Wi-Fi network.
+   * The Android app automatically attaches the header `Bypass-Tunnel-Reminder: true` to suppress Cloudflare's preview confirmation banner.
+
+3. **Android Application (`SyncBeats.apk`)**:
+   * Located in the repository root and built from `music_android_app`.
+   * **Jetpack Compose Native Shell**: Wraps a hardware-accelerated Android `WebView` configured for continuous background audio playback (`mediaPlaybackRequiresUserGesture = false`, `domStorageEnabled = true`).
+   * **Persistent Auto-Connection**:
+     * On first launch, prompts the user to enter their Cloudflare Tunnel URL or Mac local IP.
+     * The URL is saved in Android `SharedPreferences` (`syncbeats_prefs`).
+     * On subsequent launches, the app connects to your Mac instantly and automatically without user intervention.
+   * **Error Recovery**:
+     * If the tunnel restarts, drops, or is unreachable, the app catches the connection failure via `onReceivedError` and displays the server setup screen with diagnostic feedback instead of crashing or showing a blank error screen.
+     * A floating gear button (`⚙`) in the top corner allows switching server addresses at any time.
+
+4. **Progressive Web App (PWA Alternative)**:
+   * In addition to the APK, the web application includes a complete Web App Manifest (`static/manifest.json`).
+   * Mobile users can open the server URL in Google Chrome or Safari and tap **"Add to Home Screen"** to install SyncBeats as a standalone app.
+
+### 6.2 Mac Operations Cheatsheet
+
+```bash
+# 1. Update to latest code (zero downtime)
+git pull origin main && pkill -f "uvicorn main:app" && nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8080 > server.log 2>&1 &
+
+# 2. Start Cloudflare tunnel
+nohup cloudflared tunnel --url http://127.0.0.1:8080 > tunnel.log 2>&1 &
+
+# 3. Check current live public link
+grep -o "https://.*\.trycloudflare\.com" tunnel.log | tail -n 1
+
+# 4. Clean restart of tunnel (if expired or disconnected)
+pkill -f cloudflared; rm -f tunnel.log; nohup cloudflared tunnel --url http://127.0.0.1:8080 > tunnel.log 2>&1 & sleep 3; grep -o "https://.*\.trycloudflare\.com" tunnel.log | head -n 1
 ```
 
 ---

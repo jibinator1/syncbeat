@@ -70,15 +70,36 @@ Once running, access the application in your browser:
 
 ---
 
-### 4. Public Access (Tunneling)
+### 4. Public Access (Tunneling & Remote Mobile Access)
 
-To share your local music server online without port forwarding, run:
+To stream your music to your phone anywhere (outside your local Wi-Fi) without port forwarding:
 
+#### Cloudflare Tunnel (Recommended)
 ```bash
-npx localtunnel --port 8000
+cloudflared tunnel --url http://127.0.0.1:8080
 ```
+This generates a secure public HTTPS endpoint (e.g. `https://xxxx.trycloudflare.com`) with zero router configuration.
 
-This will generate a temporary public URL (e.g. `https://xxxx.loca.lt`) to access your server anywhere.
+---
+
+## 📱 Mobile Client & Mac-to-Phone Service
+
+SyncBeats is designed to run 24/7 on a host computer (like a MacBook) and stream your library directly to your phone.
+
+### 1. Android APK (`SyncBeats.apk`)
+A dedicated Android application is available directly in this repository:
+* **Download**: [Download SyncBeats.apk](https://github.com/jibinator1/syncbeat/raw/main/SyncBeats.apk) (or from your Mac server at `/syncbeats.apk`)
+* **Auto-Connection**:
+  1. Open the app on your phone.
+  2. Enter your Cloudflare Tunnel URL (or your Mac's local Wi-Fi IP).
+  3. Tap **Connect**. The app permanently saves your server address and **automatically connects to your Mac every time you launch it**.
+  4. Use the floating gear (`⚙`) in the top corner to switch or update your server address anytime.
+
+### 2. Progressive Web App (PWA)
+You can also install SyncBeats directly through your mobile browser without installing an APK:
+1. Open your server URL in **Chrome** (Android) or **Safari** (iOS).
+2. Tap **Settings / Share → "Add to Home Screen"**.
+3. SyncBeats installs as a fullscreen app with full audio playback support.
 
 ## ✨ Features
 
