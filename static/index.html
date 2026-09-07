@@ -12,7 +12,7 @@
   <link rel="manifest" href="/static/manifest.json">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/style.css?v=31">
+  <link rel="stylesheet" href="/static/style.css?v=37">
 </head>
 <body>
 
@@ -192,6 +192,9 @@
       <div class="playlist-controls">
         <button class="play-fab" id="pl-play-btn" title="Play">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="icon-btn icon-btn-lg" id="pl-shuffle-btn" title="Shuffle Playlist">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>
         </button>
         <button class="icon-btn icon-btn-lg" id="pl-download-btn" title="Download Playlist (ZIP Folder)">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 16a7 7 0 1 1 0-14 7 7 0 0 1 0 14zm1-11h-2v4H8l4 4 4-4h-3V8z"/></svg>
@@ -426,31 +429,32 @@
     </button>
     <input type="range" class="vol-slider" id="volume-slider" min="0" max="1" step="0.01" value="1">
   </div>
-</div><!-- end .layout -->
+</div><!-- end .player-bar -->
 
-<!-- ===== MOBILE BOTTOM NAVIGATION ===== -->
-<nav class="mobile-nav" id="mobile-nav">
-  <button class="mobile-nav-item active" data-view="home" id="mobile-nav-home">
-    <svg viewBox="0 0 24 24"><path d="M12.5 3.247a1 1 0 0 0-1 0L4 7.577V20h4.5v-6a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v6H20V7.577l-7.5-4.33z"/></svg>
-    <span>Home</span>
-  </button>
-  <button class="mobile-nav-item" id="mobile-nav-search-btn">
-    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-    <span>Search</span>
-  </button>
-  <button class="mobile-nav-item" data-view="library" id="mobile-nav-library">
-    <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
-    <span>Your Library</span>
-  </button>
-  <button class="mobile-nav-item" data-view="download" id="mobile-nav-download">
-    <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 16a7 7 0 1 1 0-14 7 7 0 0 1 0 14zm1-11h-2v4H8l4 4 4-4h-3V8z"/></svg>
-    <span>Download</span>
-  </button>
-  <button class="mobile-nav-item" data-view="jam" id="mobile-nav-jam">
-    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
-    <span>Jam</span>
-  </button>
-</nav>
+  <!-- ===== MOBILE BOTTOM NAVIGATION ===== -->
+  <nav class="mobile-nav" id="mobile-nav">
+    <button class="mobile-nav-item active" data-view="home" id="mobile-nav-home">
+      <svg viewBox="0 0 24 24"><path d="M12.5 3.247a1 1 0 0 0-1 0L4 7.577V20h4.5v-6a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v6H20V7.577l-7.5-4.33z"/></svg>
+      <span>Home</span>
+    </button>
+    <button class="mobile-nav-item" id="mobile-nav-search-btn">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <span>Search</span>
+    </button>
+    <button class="mobile-nav-item" data-view="library" id="mobile-nav-library">
+      <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+      <span>Your Library</span>
+    </button>
+    <button class="mobile-nav-item" data-view="download" id="mobile-nav-download">
+      <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 16a7 7 0 1 1 0-14 7 7 0 0 1 0 14zm1-11h-2v4H8l4 4 4-4h-3V8z"/></svg>
+      <span>Download</span>
+    </button>
+    <button class="mobile-nav-item" data-view="jam" id="mobile-nav-jam">
+      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+      <span>Jam</span>
+    </button>
+  </nav>
+</div><!-- end .layout -->
 
 <!-- ===== FULL SCREEN MOBILE PLAYER MODAL ===== -->
 <div id="full-player-modal" class="full-player-modal hidden">
@@ -491,6 +495,12 @@
       <button class="p-btn p-btn-play fp-play-btn" id="fp-play-btn" title="Play/Pause"><svg id="fp-play-icon" viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
       <button class="p-btn" id="fp-next-btn" title="Next"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
       <button class="p-btn" id="fp-repeat-btn" title="Repeat"><svg id="fp-repeat-icon" viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button>
+    </div>
+    <div class="full-player-volume-row">
+      <button class="icon-btn" id="fp-vol-btn" title="Mute">
+        <svg id="fp-vol-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+      </button>
+      <input type="range" class="vol-slider" id="fp-volume-slider" min="0" max="1" step="0.01" value="1">
     </div>
   </div>
 
@@ -537,6 +547,41 @@
   <div class="ctx-item ctx-danger" id="ctx-delete-track">
     <span class="ctx-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></span>
     <span>Delete from library</span>
+  </div>
+</div>
+
+<!-- ===== PLAYLIST MORE MENU ===== -->
+<div id="playlist-more-menu" class="context-menu hidden">
+  <div class="ctx-item" id="pl-menu-rename">
+    <span class="ctx-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg></span>
+    <span>Rename playlist</span>
+  </div>
+  <div class="ctx-item" id="pl-menu-add-songs">
+    <span class="ctx-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg></span>
+    <span>Add songs to playlist</span>
+  </div>
+  <div class="ctx-item" id="pl-menu-download">
+    <span class="ctx-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 16a7 7 0 1 1 0-14 7 7 0 0 1 0 14zm1-11h-2v4H8l4 4 4-4h-3V8z"/></svg></span>
+    <span>Download playlist (ZIP)</span>
+  </div>
+  <div class="ctx-divider" id="pl-menu-divider"></div>
+  <div class="ctx-item ctx-danger" id="pl-menu-delete">
+    <span class="ctx-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg></span>
+    <span>Delete playlist</span>
+  </div>
+</div>
+
+<!-- ===== ADD TRACKS TO PLAYLIST MODAL ===== -->
+<div id="playlist-add-tracks-modal" class="modal-overlay hidden">
+  <div class="modal-card" style="max-width:520px;padding:24px;max-height:85vh;display:flex;flex-direction:column;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h2 style="font-size:1.25rem;font-weight:700;">Add songs to playlist</h2>
+      <button id="close-add-tracks-modal" style="background:none;border:none;color:var(--text-sub);cursor:pointer;padding:6px;">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+      </button>
+    </div>
+    <input type="text" id="add-tracks-search-input" placeholder="Search your songs..." style="width:100%;padding:10px 14px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:500px;color:#fff;font-size:.9rem;outline:none;margin-bottom:14px;">
+    <div id="add-tracks-list" style="flex:1;overflow-y:auto;max-height:360px;display:flex;flex-direction:column;gap:6px;"></div>
   </div>
 </div>
 
@@ -610,6 +655,6 @@
   </div>
 </div>
 
-<script src="/static/app.js?v=32"></script>
+<script src="/static/app.js?v=36"></script>
 </body>
 </html>

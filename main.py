@@ -4,7 +4,7 @@ import os
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Body
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -202,6 +202,54 @@ async def add_track_to_custom_playlist(playlist_id: int, payload: TrackIdPayload
             db.add(pt)
             await db.commit()
         return {"status": "added"}
+
+
+class UpdatePlaylistPayload(BaseModel):
+    name: str
+
+
+@app.patch("/custom-playlists/{playlist_id}")
+async def rename_custom_playlist(playlist_id: int, payload: UpdatePlaylistPayload):
+    """Rename a custom playlist."""
+    new_name = payload.name.strip()
+    if not new_name:
+        raise HTTPException(400, "Playlist name cannot be empty")
+    async with async_session() as db:
+        pl = (await db.execute(select(CustomPlaylist).where(CustomPlaylist.id == playlist_id))).scalar_one_or_none()
+        if not pl:
+            raise HTTPException(404, "Playlist not found")
+        pl.name = new_name[:200]
+        await db.commit()
+        return {"id": pl.id, "name": pl.name}
+
+
+@app.delete("/custom-playlists/{playlist_id}")
+async def delete_custom_playlist(playlist_id: int):
+    """Delete a custom playlist and its track relations."""
+    from sqlalchemy import delete
+    async with async_session() as db:
+        pl = (await db.execute(select(CustomPlaylist).where(CustomPlaylist.id == playlist_id))).scalar_one_or_none()
+        if not pl:
+            raise HTTPException(404, "Playlist not found")
+        await db.execute(delete(PlaylistTrack).where(PlaylistTrack.playlist_id == playlist_id))
+        await db.delete(pl)
+        await db.commit()
+    return {"ok": True}
+
+
+@app.delete("/custom-playlists/{playlist_id}/tracks/{track_id}")
+async def remove_track_from_custom_playlist(playlist_id: int, track_id: int):
+    """Remove a track from a custom playlist."""
+    from sqlalchemy import delete
+    async with async_session() as db:
+        await db.execute(
+            delete(PlaylistTrack).where(
+                PlaylistTrack.playlist_id == playlist_id,
+                PlaylistTrack.track_id == track_id
+            )
+        )
+        await db.commit()
+    return {"ok": True}
 
 
 @app.delete("/profiles/{profile_id}")
